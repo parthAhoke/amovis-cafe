@@ -228,6 +228,67 @@ footer{
   }
 }
 
+/* ===== FINAL MOBILE ALIGNMENT FIX ===== */
+
+html, body {
+  width: 100%;
+  overflow-x: hidden;
+}
+
+/* Header full width + center */
+header {
+  width: 100%;
+  box-sizing: border-box;
+}
+
+/* Grid always center */
+.grid {
+  width: 100%;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+/* Footer full width */
+footer {
+  width: 100%;
+  box-sizing: border-box;
+}
+
+/* MOBILE FIX */
+@media (max-width: 768px) {
+
+  header {
+    padding: 20px 14px;
+  }
+
+  .logo-wrap {
+    flex-direction: column;
+    text-align: center;
+  }
+
+  .grid {
+    margin: 30px auto;
+    padding: 0 14px;
+  }
+
+  .card {
+    width: 100%;
+  }
+}
+
+/* VERY SMALL PHONES */
+@media (max-width: 420px) {
+
+  .brand-name {
+    font-size: 22px;
+  }
+
+  .logo-wrap img {
+    width: 65px;
+    height: 65px;
+  }
+}
+
 </style>
 </head>
 
