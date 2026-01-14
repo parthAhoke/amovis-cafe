@@ -2,13 +2,15 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Admin Media – Amovis Cafe</title>
+<title>Admin Media – Amovi's Cafe</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
 
 <style>
-*{box-sizing:border-box}
+*{box-sizing:border-box;font-family:'Poppins',sans-serif}
 body{
   margin:0;
-  font-family:'Segoe UI',sans-serif;
   background:#f3f4f6;
   transition:.3s;
 }
@@ -19,13 +21,12 @@ body.dark{
 
 header{
   background:linear-gradient(135deg,#7b2ff7,#f107a3);
-  color:white;
+  color:#fff;
   padding:20px 30px;
   display:flex;
   justify-content:space-between;
   align-items:center;
 }
-header h1{margin:0;font-size:22px}
 .toggle{
   background:rgba(255,255,255,.2);
   border:none;
@@ -41,19 +42,12 @@ header h1{margin:0;font-size:22px}
   padding:30px;
   border-radius:20px;
   text-align:center;
-  background:linear-gradient(135deg,#ffffff,#f9fafb);
-  box-shadow:0 15px 35px rgba(0,0,0,.1);
+  background:#fff;
+  box-shadow:0 15px 35px rgba(0,0,0,.15);
 }
-body.dark .upload-box{
-  background:linear-gradient(135deg,#1e293b,#020617);
-}
+body.dark .upload-box{background:#020617}
 
-.upload-box h3{margin-top:0}
-
-.file-input{
-  position:relative;
-  margin:20px 0;
-}
+.file-input{margin:20px 0}
 .file-input input{display:none}
 .file-label{
   display:block;
@@ -67,7 +61,7 @@ body.dark .upload-box{
 .file-name{
   margin-top:8px;
   font-size:13px;
-  opacity:.8;
+  opacity:.7;
 }
 
 .upload-box button{
@@ -80,10 +74,7 @@ body.dark .upload-box{
   cursor:pointer;
   font-size:15px;
 }
-.upload-box button:disabled{
-  opacity:.5;
-  cursor:not-allowed;
-}
+.upload-box button:disabled{opacity:.5}
 
 .gallery{
   padding:30px;
@@ -98,17 +89,12 @@ body.dark .upload-box{
   border-radius:16px;
   overflow:hidden;
   box-shadow:0 12px 28px rgba(0,0,0,.18);
-  transition:.3s;
 }
-.item:hover{transform:translateY(-6px)}
-
-.item img,
-.item video{
+.item img,.item video{
   width:100%;
   height:220px;
   object-fit:cover;
 }
-
 .delete{
   position:absolute;
   top:10px;
@@ -128,138 +114,135 @@ body.dark .upload-box{
 <body>
 
 <header>
-  <h1>Admin Media Panel</h1>
+  <h2>Admin Media Panel</h2>
   <button class="toggle" onclick="toggleDark()">🌙</button>
 </header>
 
+<!-- MAIN VIDEO -->
 <div class="upload-box">
-  <h3>Upload Main Cafe / Hall Video</h3>
-
+  <h3>Main Cafe / Hall Video</h3>
   <div class="file-input">
     <label class="file-label" for="mainVideo">Choose Main Video</label>
-    <input type="file" id="mainVideo" accept="video/*" onchange="mainVideoSelected()">
-    <div class="file-name" id="mainVideoName">No video selected</div>
+    <input type="file" id="mainVideo" accept="video/*" onchange="mainSelected()">
+    <div class="file-name" id="mainName">No video selected</div>
   </div>
-
-  <button id="mainUploadBtn" onclick="uploadMainVideo()" disabled>
-    Upload Main Video
-  </button>
+  <button id="mainBtn" onclick="uploadMain()" disabled>Upload Main Video</button>
 </div>
 
+<!-- GALLERY -->
 <div class="upload-box">
-  <h3>Upload Photo / Video</h3>
-
+  <h3>Gallery Photo / Video</h3>
   <div class="file-input">
     <label class="file-label" for="file">Choose File</label>
-    <input type="file" id="file" onchange="showName()">
+    <input type="file" id="file" accept="image/*,video/*" onchange="showName()">
     <div class="file-name" id="fileName">No file selected</div>
   </div>
-
-  <button onclick="upload()">Upload Media</button>
+  <button onclick="uploadGallery()">Upload Media</button>
 </div>
 
 <div class="gallery" id="gallery"></div>
 
+<!-- 🔥 FIREBASE -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+
 <script>
+/* DARK MODE */
 function toggleDark(){
   document.body.classList.toggle("dark");
-  localStorage.setItem("amovis_dark",document.body.classList.contains("dark"));
-}
-if(localStorage.getItem("amovis_dark")==="true"){
-  document.body.classList.add("dark");
 }
 
-function showName(){
-  const f=document.getElementById("file").files[0];
-  document.getElementById("fileName").innerText =
-    f ? f.name : "No file selected";
-}
+/* FIREBASE CONFIG */
+firebase.initializeApp({
+  apiKey: "AIzaSyBymiTjjqUN-AAspzoA_bOGUWOzEc9o3jA",
+  authDomain: "amovis-cafe-booking.firebaseapp.com",
+  projectId: "amovis-cafe-booking"
+});
+const db = firebase.firestore();
 
-function mainVideoSelected(){
-  const f=document.getElementById("mainVideo").files[0];
-  document.getElementById("mainVideoName").innerText =
-    f ? f.name : "No video selected";
-  document.getElementById("mainUploadBtn").disabled = !f;
-}
-
+/* CLOUDINARY */
 const CLOUD_NAME="amoviscafe";
 const UPLOAD_PRESET="amovis_gallery";
 
-function uploadMainVideo(){
-  const file=document.getElementById("mainVideo").files[0];
-  if(!file) return;
-
+/* MAIN VIDEO */
+function mainSelected(){
+  mainName.innerText = mainVideo.files[0]?.name || "No video selected";
+  mainBtn.disabled = !mainVideo.files.length;
+}
+function uploadMain(){
+  const f=mainVideo.files[0];
   const data=new FormData();
-  data.append("file",file);
+  data.append("file",f);
   data.append("upload_preset",UPLOAD_PRESET);
 
-  document.getElementById("mainUploadBtn").innerText="Uploading...";
-
+  mainBtn.innerText="Uploading...";
   fetch(`https://api.cloudinary.com/v1_1/${CLOUD_NAME}/video/upload`,{
-    method:"POST",
-    body:data
+    method:"POST",body:data
   })
   .then(r=>r.json())
   .then(res=>{
-    localStorage.setItem("amovis_main_video",res.secure_url);
-    alert("Main video updated successfully");
-    document.getElementById("mainVideo").value="";
-    document.getElementById("mainVideoName").innerText="No video selected";
-    document.getElementById("mainUploadBtn").innerText="Upload Main Video";
-    document.getElementById("mainUploadBtn").disabled=true;
+    db.collection("settings").doc("main").set({
+      url:res.secure_url,
+      updated:firebase.firestore.FieldValue.serverTimestamp()
+    });
+    alert("Main video updated");
+    mainBtn.innerText="Upload Main Video";
+    mainBtn.disabled=true;
+    mainVideo.value="";
+    mainName.innerText="No video selected";
   });
 }
 
-let media=JSON.parse(localStorage.getItem("amovis_gallery"))||[];
-const gallery=document.getElementById("gallery");
+/* GALLERY */
+function showName(){
+  fileName.innerText=file.files[0]?.name||"No file selected";
+}
 
-function render(){
+function uploadGallery(){
+  const f=file.files[0];
+  if(!f) return alert("Select file");
+
+  const data=new FormData();
+  data.append("file",f);
+  data.append("upload_preset",UPLOAD_PRESET);
+
+  fetch(`https://api.cloudinary.com/v1_1/${CLOUD_NAME}/auto/upload`,{
+    method:"POST",body:data
+  })
+  .then(r=>r.json())
+  .then(res=>{
+    db.collection("gallery").add({
+      url:res.secure_url,
+      type:res.resource_type,
+      created:firebase.firestore.FieldValue.serverTimestamp()
+    });
+    file.value="";
+    showName();
+  });
+}
+
+/* LOAD GALLERY */
+const gallery=document.getElementById("gallery");
+db.collection("gallery").orderBy("created","desc")
+.onSnapshot(snap=>{
   gallery.innerHTML="";
-  media.sort((a,b)=>b.time-a.time).forEach((m,i)=>{
+  snap.forEach(doc=>{
+    const m=doc.data();
     gallery.innerHTML+=`
       <div class="item">
         ${m.type==="image"
           ? `<img src="${m.url}">`
           : `<video src="${m.url}" controls></video>`}
-        <button class="delete" onclick="removeItem(${i})">×</button>
+        <button class="delete" onclick="del('${doc.id}')">×</button>
       </div>`;
   });
+});
+
+function del(id){
+  if(confirm("Delete media?")){
+    db.collection("gallery").doc(id).delete();
+  }
 }
-
-function upload(){
-  const file=document.getElementById("file").files[0];
-  if(!file) return alert("Select file first");
-
-  const data=new FormData();
-  data.append("file",file);
-  data.append("upload_preset",UPLOAD_PRESET);
-
-  fetch(`https://api.cloudinary.com/v1_1/${CLOUD_NAME}/auto/upload`,{
-    method:"POST",
-    body:data
-  })
-  .then(r=>r.json())
-  .then(res=>{
-    media.push({
-      url:res.secure_url,
-      type:res.resource_type,
-      time:Date.now()
-    });
-    localStorage.setItem("amovis_gallery",JSON.stringify(media));
-    render();
-    document.getElementById("file").value="";
-    showName();
-  });
-}
-
-function removeItem(i){
-  if(!confirm("Delete this media?")) return;
-  media.splice(i,1);
-  localStorage.setItem("amovis_gallery",JSON.stringify(media));
-  render();
-}
-
-render();
 </script>
 
 </body>
