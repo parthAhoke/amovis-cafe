@@ -136,6 +136,98 @@ footer{
   padding:24px;
   font-size:13px;
 }
+/* ================= RESPONSIVE FIX ================= */
+
+/* Tablets & small laptops */
+@media (max-width: 1024px){
+  .brand-name{
+    font-size:30px;
+  }
+
+  .logo-wrap img{
+    width:80px;
+    height:80px;
+  }
+
+  .grid{
+    margin:50px auto;
+    gap:28px;
+  }
+}
+
+/* Mobile devices */
+@media (max-width: 768px){
+
+  header{
+    padding:22px 16px;
+  }
+
+  .logo-wrap{
+    flex-direction:column;
+    gap:12px;
+  }
+
+  .logo-wrap img{
+    width:70px;
+    height:70px;
+  }
+
+  .brand-name{
+    font-size:26px;
+    text-align:center;
+  }
+
+  .brand-sub{
+    text-align:center;
+    font-size:12px;
+  }
+
+  .grid{
+    margin:35px auto;
+    padding:10px;
+    gap:22px;
+  }
+
+  .card{
+    padding:32px 22px;
+  }
+
+  .card h3{
+    font-size:19px;
+  }
+
+  .card p{
+    font-size:13px;
+  }
+
+  .card button{
+    padding:13px 30px;
+    font-size:13px;
+  }
+}
+
+/* Very small phones */
+@media (max-width: 420px){
+
+  .brand-name{
+    font-size:22px;
+  }
+
+  .card{
+    padding:26px 18px;
+    border-radius:22px;
+  }
+
+  .card h3{
+    font-size:17px;
+  }
+
+  footer{
+    font-size:12px;
+    padding:18px;
+  }
+}
+
 </style>
 </head>
 
