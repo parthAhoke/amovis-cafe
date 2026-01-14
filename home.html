@@ -369,23 +369,10 @@ localStorage.setItem("total",totalAmount);
 window.location.href="food.html";
 }
 
-/* VIDEO FINAL FIX */
-const hero=document.getElementById("heroVideo");
-const mainVideo=localStorage.getItem("amovis_main_video");
-if(mainVideo){
-hero.innerHTML=`<video id="heroVid" src="${mainVideo}" autoplay muted loop playsinline></video>`;
-const v=document.getElementById("heroVid");
-hero.onclick=()=>{
-v.muted=false;
-v.controls=true;
-if(v.requestFullscreen)v.requestFullscreen();
-else if(v.webkitRequestFullscreen)v.webkitRequestFullscreen();
-v.play();
-};
-}
-
 updateTotal();
 loadReviews();
+
+</script>
 
 <!-- ================= FIREBASE ================= -->
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
@@ -417,7 +404,6 @@ db.collection("settings").doc("main").onSnapshot(doc=>{
     };
   }
 });
-</script>
 
 </body>
 </html>
