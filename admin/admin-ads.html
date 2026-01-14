@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Manage Advertisements – Amovi's Cafe</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700;800&display=swap" rel="stylesheet">
+
+<style>
+/* ================= RESET ================= */
+*{
+  margin:0;
+  padding:0;
+  box-sizing:border-box;
+  font-family:'Poppins',sans-serif;
+}
+
+body{
+  min-height:100vh;
+  background:linear-gradient(135deg,#f5f3ff,#fdf2f8);
+}
+
+/* ================= HEADER ================= */
+header{
+  background:linear-gradient(90deg,#6d28d9,#7c3aed,#db2777);
+  padding:26px 20px;
+  text-align:center;
+  color:#fff;
+  box-shadow:0 12px 35px rgba(0,0,0,.35);
+}
+
+header h2{
+  font-size:28px;
+  font-weight:800;
+  text-shadow:2px 2px 12px rgba(0,0,0,.4);
+}
+
+header p{
+  font-size:13px;
+  opacity:.9;
+}
+
+/* ================= CONTAINER ================= */
+.container{
+  max-width:1100px;
+  margin:60px auto;
+  padding:20px;
+}
+
+/* ================= UPLOAD CARD ================= */
+.upload-box{
+  background:rgba(255,255,255,.55);
+  backdrop-filter:blur(14px);
+  border-radius:30px;
+  padding:34px;
+  box-shadow:0 25px 60px rgba(0,0,0,.25);
+  border:1px solid rgba(255,255,255,.45);
+  max-width:520px;
+  margin:0 auto 60px;
+  text-align:center;
+}
+
+.upload-box h3{
+  font-size:22px;
+  margin-bottom:6px;
+}
+
+.upload-box p{
+  font-size:13px;
+  color:#4b5563;
+}
+
+/* FILE INPUT */
+.file-input{
+  margin:24px 0;
+}
+
+.file-input input{
+  display:none;
+}
+
+.file-label{
+  display:block;
+  padding:15px;
+  border-radius:18px;
+  background:linear-gradient(90deg,#7c3aed,#ec4899);
+  color:#fff;
+  font-weight:700;
+  cursor:pointer;
+  transition:.3s;
+}
+
+.file-label:hover{
+  transform:scale(1.05);
+}
+
+.file-name{
+  margin-top:8px;
+  font-size:13px;
+  opacity:.7;
+}
+
+/* BUTTON */
+.upload-box button{
+  margin-top:20px;
+  padding:14px 36px;
+  border:none;
+  border-radius:24px;
+  background:linear-gradient(90deg,#7c3aed,#ec4899);
+  color:#fff;
+  font-weight:700;
+  cursor:pointer;
+  transition:.3s;
+}
+
+.upload-box button:hover{
+  transform:scale(1.1);
+  box-shadow:0 14px 30px rgba(0,0,0,.35);
+}
+
+/* ================= ADS GRID ================= */
+.ads-grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(260px,1fr));
+  gap:30px;
+}
+
+/* ================= AD CARD ================= */
+.ad-card{
+  position:relative;
+  background:#000;
+  border-radius:26px;
+  overflow:hidden;
+  box-shadow:0 20px 50px rgba(0,0,0,.35);
+}
+
+.ad-card img,
+.ad-card video{
+  width:100%;
+  height:220px;
+  object-fit:cover;
+}
+
+/* DELETE BUTTON */
+.delete{
+  position:absolute;
+  top:12px;
+  right:12px;
+  width:38px;
+  height:38px;
+  border:none;
+  border-radius:50%;
+  background:#ef4444;
+  color:#fff;
+  font-size:20px;
+  cursor:pointer;
+  z-index:2;
+  box-shadow:0 8px 18px rgba(0,0,0,.4);
+}
+
+/* ================= FOOTER ================= */
+footer{
+  margin-top:80px;
+  background:linear-gradient(135deg,#312e81,#4c1d95,#701a75);
+  color:#e5e7eb;
+  text-align:center;
+  padding:22px;
+  font-size:13px;
+}
+</style>
+</head>
+
+<body>
+
+<header>
+  <h2>Manage Advertisements</h2>
+  <p>Splash Screen Ads • Photos & Videos</p>
+</header>
+
+<div class="container">
+
+  <!-- UPLOAD -->
+  <div class="upload-box">
+    <h3>Add Advertisement</h3>
+    <p>Upload photo or video for splash ads</p>
+
+    <div class="file-input">
+      <label class="file-label" for="file">Choose Photo / Video</label>
+      <input type="file" id="file" accept="image/*,video/*" onchange="showName()">
+      <div class="file-name" id="fileName">No file selected</div>
+    </div>
+
+    <button onclick="uploadAd()">Upload Advertisement</button>
+  </div>
+
+  <!-- ADS LIST -->
+  <div class="ads-grid" id="adsGrid"></div>
+
+</div>
+
+<footer>
+  © 2026 Amovi's Cafe & Fast Food · Advertisement Manager
+</footer>
+
+<script>
+/* ================= CLOUDINARY ================= */
+const CLOUD_NAME = "amoviscafe";
+const UPLOAD_PRESET = "amovis_gallery";
+
+/* ================= STORAGE ================= */
+let ads = JSON.parse(localStorage.getItem("amovis_ads")) || [];
+const grid = document.getElementById("adsGrid");
+
+/* FILE NAME */
+function showName(){
+  const f = document.getElementById("file").files[0];
+  document.getElementById("fileName").innerText =
+    f ? f.name : "No file selected";
+}
+
+/* RENDER ADS */
+function renderAds(){
+  grid.innerHTML="";
+  ads.forEach((a,i)=>{
+    grid.innerHTML += `
+      <div class="ad-card">
+        ${a.type==="image"
+          ? `<img src="${a.url}">`
+          : `<video src="${a.url}" muted loop autoplay></video>`
+        }
+        <button class="delete" onclick="removeAd(${i})">×</button>
+      </div>
+    `;
+  });
+}
+
+/* UPLOAD AD */
+function uploadAd(){
+  const file = document.getElementById("file").files[0];
+  if(!file) return alert("Select file first");
+
+  const data = new FormData();
+  data.append("file",file);
+  data.append("upload_preset",UPLOAD_PRESET);
+
+  fetch(`https://api.cloudinary.com/v1_1/${CLOUD_NAME}/auto/upload`,{
+    method:"POST",
+    body:data
+  })
+  .then(r=>r.json())
+  .then(res=>{
+    ads.unshift({
+      url:res.secure_url,
+      type:res.resource_type
+    });
+    localStorage.setItem("amovis_ads",JSON.stringify(ads));
+    renderAds();
+    document.getElementById("file").value="";
+    showName();
+  });
+}
+
+/* DELETE AD */
+function removeAd(i){
+  if(!confirm("Remove this advertisement?")) return;
+  ads.splice(i,1);
+  localStorage.setItem("amovis_ads",JSON.stringify(ads));
+  renderAds();
+}
+
+/* INIT */
+renderAds();
+</script>
+
+</body>
+</html>

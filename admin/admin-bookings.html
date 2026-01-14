@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Admin Bookings – Amovi's Cafe</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+<style>
+/* ================= RESET ================= */
+*{
+  margin:0;
+  padding:0;
+  box-sizing:border-box;
+  font-family:'Poppins',sans-serif;
+}
+
+body{
+  min-height:100vh;
+  background:
+    radial-gradient(circle at top,#f5d0fe,#ede9fe,#fce7f3);
+}
+
+/* ================= HEADER ================= */
+header{
+  height:85px;
+  background:linear-gradient(90deg,#6d28d9,#7c3aed,#ec4899);
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  padding:0 26px;
+  color:#fff;
+  box-shadow:0 14px 30px rgba(0,0,0,.3);
+}
+
+.header-left{
+  display:flex;
+  align-items:center;
+  gap:14px;
+}
+
+.logo{
+  width:52px;
+  height:52px;
+  border-radius:50%;
+  background:#fff;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:26px;
+  color:#7c3aed;
+  font-weight:800;
+  box-shadow:
+    0 0 0 4px rgba(255,255,255,.4),
+    0 0 25px rgba(255,255,255,.7);
+  transition:.4s;
+}
+.logo:hover{
+  transform:scale(1.15) rotate(8deg);
+}
+
+header h2{
+  font-size:22px;
+  font-weight:800;
+  text-shadow:
+    2px 2px 0 #9333ea,
+    0 6px 14px rgba(0,0,0,.35);
+}
+
+header button{
+  background:rgba(255,255,255,.22);
+  border:none;
+  color:#fff;
+  padding:12px 20px;
+  border-radius:18px;
+  font-weight:700;
+  cursor:pointer;
+  transition:.35s;
+}
+header button:hover{
+  background:#fff;
+  color:#6d28d9;
+  transform:scale(1.08);
+}
+
+/* ================= CONTAINER ================= */
+.container{
+  max-width:1300px;
+  margin:36px auto;
+  background:#fff;
+  border-radius:28px;
+  padding:28px;
+  box-shadow:
+    0 35px 80px rgba(0,0,0,.35);
+  overflow-x:auto;
+  animation:fadeUp .6s ease;
+}
+
+@keyframes fadeUp{
+  from{opacity:0;transform:translateY(30px)}
+  to{opacity:1;transform:translateY(0)}
+}
+
+.container h3{
+  margin-bottom:18px;
+  font-size:20px;
+  font-weight:800;
+  color:#4c1d95;
+}
+
+/* ================= TABLE ================= */
+table{
+  width:100%;
+  border-collapse:collapse;
+  font-size:13px;
+  min-width:1050px;
+}
+
+th,td{
+  padding:12px 10px;
+  border-bottom:1px solid #e5e7eb;
+  text-align:left;
+  vertical-align:top;
+}
+
+th{
+  background:
+    linear-gradient(135deg,#ede9fe,#fdf4ff);
+  font-weight:700;
+  color:#4c1d95;
+  position:sticky;
+  top:0;
+  z-index:2;
+}
+
+tr{
+  transition:.25s;
+}
+
+tr:hover{
+  background:#faf5ff;
+}
+
+/* ================= FOOD ================= */
+.food{
+  font-size:12px;
+  line-height:1.5;
+  color:#374151;
+}
+
+/* ================= STATUS ================= */
+.status-paid{
+  color:#16a34a;
+  font-weight:800;
+}
+
+.status-pending{
+  color:#dc2626;
+  font-weight:800;
+}
+
+/* ================= BADGES ================= */
+.badge{
+  padding:6px 10px;
+  border-radius:12px;
+  font-size:11px;
+  font-weight:700;
+  display:inline-block;
+}
+
+.badge-paid{
+  background:#dcfce7;
+  color:#166534;
+}
+
+.badge-pending{
+  background:#fee2e2;
+  color:#991b1b;
+}
+
+/* ================= SCROLLBAR ================= */
+.container::-webkit-scrollbar{
+  height:10px;
+}
+.container::-webkit-scrollbar-thumb{
+  background:#c4b5fd;
+  border-radius:10px;
+}
+.container::-webkit-scrollbar-track{
+  background:#ede9fe;
+}
+</style>
+</head>
+
+<body>
+
+<header>
+  <div class="header-left">
+    <div class="logo">A</div>
+    <h2>Admin Dashboard – Bookings</h2>
+  </div>
+  <button onclick="logout()">Logout</button>
+</header>
+
+<div class="container">
+  <h3>📋 All Bookings</h3>
+
+  <table>
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Mobile</th>
+        <th>Package</th>
+        <th>Date</th>
+        <th>Time Slot</th>
+        <th>People</th>
+        <th>Food Items</th>
+        <th>Amount</th>
+        <th>Payment ID</th>
+        <th>Status</th>
+      </tr>
+    </thead>
+    <tbody id="bookingList">
+      <tr>
+        <td colspan="10">Loading bookings...</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+<!-- ================= FIREBASE SDK ================= -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+
+<script>
+/* 🔥 FIREBASE CONFIG (UNCHANGED) */
+const firebaseConfig = {
+  apiKey: "AIzaSyBymiTjjqUN-AAspzoA_bOGUWOzEc9o3jA",
+  authDomain: "amovis-cafe-booking.firebaseapp.com",
+  projectId: "amovis-cafe-booking",
+  appId: "1:1049074624404:web:35b18f7c0470939257d181"
+};
+
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
+const auth = firebase.auth();
+
+/* 🔐 AUTH CHECK */
+auth.onAuthStateChanged(user=>{
+  if(!user){
+    window.location.href="admin-login.html";
+  }
+});
+
+/* 📥 LOAD BOOKINGS */
+const list = document.getElementById("bookingList");
+
+db.collection("bookings")
+  .orderBy("createdAt","desc")
+  .onSnapshot(snapshot=>{
+    list.innerHTML="";
+    if(snapshot.empty){
+      list.innerHTML =
+        "<tr><td colspan='10'>No bookings found</td></tr>";
+      return;
+    }
+
+    snapshot.forEach(doc=>{
+      const b = doc.data();
+
+      const foodHTML = b.foodItems && b.foodItems.length
+        ? b.foodItems.map(f =>
+            `<div class="food">• ${f.name} × ${f.qty}</div>`
+          ).join("")
+        : "<div class='food'>No Food</div>";
+
+      const statusHTML =
+        b.status === "PAID"
+        ? `<span class="badge badge-paid">PAID</span>`
+        : `<span class="badge badge-pending">PENDING</span>`;
+
+      list.innerHTML += `
+        <tr>
+          <td>${b.name || "-"}</td>
+          <td>${b.mobile || "-"}</td>
+          <td>${b.package || "-"}</td>
+          <td>${b.date || "-"}</td>
+          <td>${b.timeSlot || "-"}</td>
+          <td>${b.people || "-"}</td>
+          <td>${foodHTML}</td>
+          <td>₹${b.grandTotal || 0}</td>
+          <td>${b.paymentId || "-"}</td>
+          <td>${statusHTML}</td>
+        </tr>
+      `;
+    });
+  });
+
+/* 🚪 LOGOUT */
+function logout(){
+  auth.signOut().then(()=>{
+    window.location.href="admin-login.html";
+  });
+}
+</script>
+
+</body>
+</html>

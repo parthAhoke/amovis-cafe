@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Admin Media – Amovis Cafe</title>
+
+<style>
+*{box-sizing:border-box}
+body{
+  margin:0;
+  font-family:'Segoe UI',sans-serif;
+  background:#f3f4f6;
+  transition:.3s;
+}
+body.dark{
+  background:#0f172a;
+  color:#e5e7eb;
+}
+
+header{
+  background:linear-gradient(135deg,#7b2ff7,#f107a3);
+  color:white;
+  padding:20px 30px;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+}
+header h1{margin:0;font-size:22px}
+.toggle{
+  background:rgba(255,255,255,.2);
+  border:none;
+  color:white;
+  padding:8px 14px;
+  border-radius:20px;
+  cursor:pointer;
+}
+
+.upload-box{
+  max-width:520px;
+  margin:35px auto;
+  padding:30px;
+  border-radius:20px;
+  text-align:center;
+  background:linear-gradient(135deg,#ffffff,#f9fafb);
+  box-shadow:0 15px 35px rgba(0,0,0,.1);
+}
+body.dark .upload-box{
+  background:linear-gradient(135deg,#1e293b,#020617);
+}
+
+.upload-box h3{margin-top:0}
+
+.file-input{
+  position:relative;
+  margin:20px 0;
+}
+.file-input input{display:none}
+.file-label{
+  display:block;
+  padding:14px;
+  border-radius:14px;
+  background:linear-gradient(135deg,#7b2ff7,#f107a3);
+  color:white;
+  cursor:pointer;
+  font-weight:600;
+}
+.file-name{
+  margin-top:8px;
+  font-size:13px;
+  opacity:.8;
+}
+
+.upload-box button{
+  margin-top:18px;
+  padding:12px 26px;
+  border:none;
+  background:linear-gradient(135deg,#7b2ff7,#f107a3);
+  color:white;
+  border-radius:14px;
+  cursor:pointer;
+  font-size:15px;
+}
+.upload-box button:disabled{
+  opacity:.5;
+  cursor:not-allowed;
+}
+
+.gallery{
+  padding:30px;
+  display:grid;
+  grid-template-columns:repeat(auto-fill,minmax(230px,1fr));
+  gap:22px;
+}
+
+.item{
+  position:relative;
+  background:black;
+  border-radius:16px;
+  overflow:hidden;
+  box-shadow:0 12px 28px rgba(0,0,0,.18);
+  transition:.3s;
+}
+.item:hover{transform:translateY(-6px)}
+
+.item img,
+.item video{
+  width:100%;
+  height:220px;
+  object-fit:cover;
+}
+
+.delete{
+  position:absolute;
+  top:10px;
+  right:10px;
+  background:#ef4444;
+  color:white;
+  border:none;
+  width:36px;
+  height:36px;
+  border-radius:50%;
+  font-size:20px;
+  cursor:pointer;
+}
+</style>
+</head>
+
+<body>
+
+<header>
+  <h1>Admin Media Panel</h1>
+  <button class="toggle" onclick="toggleDark()">🌙</button>
+</header>
+
+<div class="upload-box">
+  <h3>Upload Main Cafe / Hall Video</h3>
+
+  <div class="file-input">
+    <label class="file-label" for="mainVideo">Choose Main Video</label>
+    <input type="file" id="mainVideo" accept="video/*" onchange="mainVideoSelected()">
+    <div class="file-name" id="mainVideoName">No video selected</div>
+  </div>
+
+  <button id="mainUploadBtn" onclick="uploadMainVideo()" disabled>
+    Upload Main Video
+  </button>
+</div>
+
+<div class="upload-box">
+  <h3>Upload Photo / Video</h3>
+
+  <div class="file-input">
+    <label class="file-label" for="file">Choose File</label>
+    <input type="file" id="file" onchange="showName()">
+    <div class="file-name" id="fileName">No file selected</div>
+  </div>
+
+  <button onclick="upload()">Upload Media</button>
+</div>
+
+<div class="gallery" id="gallery"></div>
+
+<script>
+function toggleDark(){
+  document.body.classList.toggle("dark");
+  localStorage.setItem("amovis_dark",document.body.classList.contains("dark"));
+}
+if(localStorage.getItem("amovis_dark")==="true"){
+  document.body.classList.add("dark");
+}
+
+function showName(){
+  const f=document.getElementById("file").files[0];
+  document.getElementById("fileName").innerText =
+    f ? f.name : "No file selected";
+}
+
+function mainVideoSelected(){
+  const f=document.getElementById("mainVideo").files[0];
+  document.getElementById("mainVideoName").innerText =
+    f ? f.name : "No video selected";
+  document.getElementById("mainUploadBtn").disabled = !f;
+}
+
+const CLOUD_NAME="amoviscafe";
+const UPLOAD_PRESET="amovis_gallery";
+
+function uploadMainVideo(){
+  const file=document.getElementById("mainVideo").files[0];
+  if(!file) return;
+
+  const data=new FormData();
+  data.append("file",file);
+  data.append("upload_preset",UPLOAD_PRESET);
+
+  document.getElementById("mainUploadBtn").innerText="Uploading...";
+
+  fetch(`https://api.cloudinary.com/v1_1/${CLOUD_NAME}/video/upload`,{
+    method:"POST",
+    body:data
+  })
+  .then(r=>r.json())
+  .then(res=>{
+    localStorage.setItem("amovis_main_video",res.secure_url);
+    alert("Main video updated successfully");
+    document.getElementById("mainVideo").value="";
+    document.getElementById("mainVideoName").innerText="No video selected";
+    document.getElementById("mainUploadBtn").innerText="Upload Main Video";
+    document.getElementById("mainUploadBtn").disabled=true;
+  });
+}
+
+let media=JSON.parse(localStorage.getItem("amovis_gallery"))||[];
+const gallery=document.getElementById("gallery");
+
+function render(){
+  gallery.innerHTML="";
+  media.sort((a,b)=>b.time-a.time).forEach((m,i)=>{
+    gallery.innerHTML+=`
+      <div class="item">
+        ${m.type==="image"
+          ? `<img src="${m.url}">`
+          : `<video src="${m.url}" controls></video>`}
+        <button class="delete" onclick="removeItem(${i})">×</button>
+      </div>`;
+  });
+}
+
+function upload(){
+  const file=document.getElementById("file").files[0];
+  if(!file) return alert("Select file first");
+
+  const data=new FormData();
+  data.append("file",file);
+  data.append("upload_preset",UPLOAD_PRESET);
+
+  fetch(`https://api.cloudinary.com/v1_1/${CLOUD_NAME}/auto/upload`,{
+    method:"POST",
+    body:data
+  })
+  .then(r=>r.json())
+  .then(res=>{
+    media.push({
+      url:res.secure_url,
+      type:res.resource_type,
+      time:Date.now()
+    });
+    localStorage.setItem("amovis_gallery",JSON.stringify(media));
+    render();
+    document.getElementById("file").value="";
+    showName();
+  });
+}
+
+function removeItem(i){
+  if(!confirm("Delete this media?")) return;
+  media.splice(i,1);
+  localStorage.setItem("amovis_gallery",JSON.stringify(media));
+  render();
+}
+
+render();
+</script>
+
+</body>
+</html>
