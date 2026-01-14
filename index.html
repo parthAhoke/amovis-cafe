@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Welcome – Amovi's Cafe</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700;800&display=swap" rel="stylesheet">
+
+<style>
+*{
+  margin:0;
+  padding:0;
+  box-sizing:border-box;
+  font-family:'Poppins',sans-serif;
+}
+
+body{
+  height:100vh;
+  background:#05050b;
+  overflow:hidden;
+  color:#fff;
+}
+
+/* ================= HEADER ================= */
+header{
+  width:100%;
+  position:fixed;
+  top:0;
+  left:0;
+  z-index:10;
+  background:rgba(0,0,0,.6);
+  backdrop-filter:blur(14px);
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  padding:14px 20px;
+}
+
+.brand{
+  display:flex;
+  align-items:center;
+  gap:14px;
+}
+
+.logo{
+  width:58px;
+  height:58px;
+  border-radius:50%;
+  background:#000;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  box-shadow:
+    0 0 18px #a855f7,
+    0 0 38px #7c3aed;
+}
+
+.logo img{
+  width:70%;
+}
+
+.brand h1{
+  font-size:20px;
+  font-weight:800;
+}
+
+.skip{
+  background:linear-gradient(90deg,#7c3aed,#ec4899);
+  padding:8px 18px;
+  border-radius:20px;
+  cursor:pointer;
+  font-size:12px;
+}
+
+/* ================= ADS ================= */
+.ads-container{
+  position:absolute;
+  top:88px;
+  left:0;
+  width:100%;
+  height:calc(100vh - 88px);
+  overflow:hidden;
+}
+
+.ads-track{
+  height:100%;
+  transition:transform 1.2s ease-in-out;
+}
+
+/* ================= PAGE ================= */
+.page{
+  height:100%;
+  display:grid;
+  grid-template-columns:repeat(2,1fr);
+  gap:18px;
+  padding:18px;
+}
+
+/* Single ad */
+.ad-box{
+  width:100%;
+  height:100%;
+  border-radius:22px;
+  overflow:hidden;
+  position:relative;
+  box-shadow:0 30px 90px rgba(0,0,0,.9);
+}
+
+/* IMAGE */
+.ad-box img{
+  width:100%;
+  height:100%;
+  object-fit:cover;
+  animation:zoom 10s linear forwards;
+}
+
+@keyframes zoom{
+  from{transform:scale(1);}
+  to{transform:scale(1.12);}
+}
+
+/* VIDEO */
+.ad-box video{
+  width:100%;
+  height:100%;
+  object-fit:cover;
+}
+
+/* ================= MOBILE ================= */
+@media(max-width:900px){
+  header{
+    padding:12px 14px;
+  }
+
+  .brand h1{
+    font-size:16px;
+  }
+
+  .logo{
+    width:48px;
+    height:48px;
+  }
+
+  .ads-container{
+    top:78px;
+    height:calc(100vh - 78px);
+  }
+
+  .page{
+    grid-template-columns:1fr;
+    padding:14px;
+  }
+}
+</style>
+</head>
+
+<body>
+
+<header>
+  <div class="brand">
+    <div class="logo">
+      <img src="assets/logo.png">
+    </div>
+    <h1>Welcome to Amovi’s Cafe</h1>
+  </div>
+  <div class="skip" onclick="goHome()">Skip</div>
+</header>
+
+<div class="ads-container">
+  <div class="ads-track" id="adsTrack"></div>
+</div>
+
+<script>
+const ads = JSON.parse(localStorage.getItem("amovis_ads")) || [];
+const track = document.getElementById("adsTrack");
+
+let pages = [];
+let pageIndex = 0;
+
+/* detect mobile */
+const isMobile = window.innerWidth < 900;
+const ADS_PER_PAGE = isMobile ? 1 : 2;
+
+/* ================= BUILD PAGES ================= */
+for(let i=0;i<ads.length;i+=ADS_PER_PAGE){
+  pages.push(ads.slice(i,i+ADS_PER_PAGE));
+}
+
+pages.forEach(group=>{
+  const page=document.createElement("div");
+  page.className="page";
+
+  group.forEach(ad=>{
+    const box=document.createElement("div");
+    box.className="ad-box";
+
+    if(ad.type==="video"){
+      box.innerHTML=`<video src="${ad.url}" autoplay muted loop playsinline></video>`;
+    }else{
+      box.innerHTML=`<img src="${ad.url}">`;
+    }
+
+    box.onclick=()=>{
+      const el=box.querySelector("video,img");
+      if(el.requestFullscreen) el.requestFullscreen();
+      if(el.tagName==="VIDEO"){
+        el.muted=false;
+        el.play();
+      }
+    };
+
+    page.appendChild(box);
+  });
+
+  track.appendChild(page);
+});
+
+/* ================= AUTO SCROLL ================= */
+if(pages.length){
+  setInterval(()=>{
+    pageIndex++;
+    if(pageIndex>=pages.length){
+      goHome();
+      return;
+    }
+    track.style.transform=`translateY(-${pageIndex*100}%)`;
+  },10000);
+}
+
+function goHome(){
+  location.href="home.html";
+}
+</script>
+
+</body>
+</html>
