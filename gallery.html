@@ -2,119 +2,224 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Gallery – Amovis Cafe</title>
+<title>Gallery – Amovi's Cafe</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<!-- GOOGLE FONT -->
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
 
 <style>
-*{box-sizing:border-box}
-body{
+/* ================= RESET ================= */
+*{
   margin:0;
-  font-family:Arial,Helvetica,sans-serif;
-  background:#f5f7fb;
+  padding:0;
+  box-sizing:border-box;
+  font-family:'Poppins',sans-serif;
 }
-body.dark{background:#0f172a;color:#e5e7eb}
 
+/* ================= BODY ================= */
+body{
+  background:#f5f7fb;
+  min-height:100vh;
+  transition:.3s;
+}
+body.dark{
+  background:#0f172a;
+  color:#e5e7eb;
+}
+
+/* ================= HEADER ================= */
 header{
   background:linear-gradient(90deg,#7c3aed,#ec4899);
   color:#fff;
-  padding:16px 24px;
+  padding:16px 22px;
   display:flex;
   justify-content:space-between;
   align-items:center;
+  box-shadow:0 10px 25px rgba(0,0,0,.25);
 }
 
+header h2{
+  font-size:22px;
+  font-weight:700;
+}
+
+header button{
+  background:rgba(255,255,255,.2);
+  border:none;
+  padding:8px 14px;
+  border-radius:20px;
+  cursor:pointer;
+  color:#fff;
+  font-size:14px;
+}
+
+/* ================= GRID ================= */
 .grid{
   padding:30px;
   display:grid;
   grid-template-columns:repeat(auto-fill,minmax(240px,1fr));
-  gap:20px;
+  gap:22px;
 }
 
+/* ================= CARD ================= */
 .card{
-  background:white;
-  border-radius:14px;
+  background:#fff;
+  border-radius:16px;
   overflow:hidden;
+  box-shadow:0 14px 30px rgba(0,0,0,.18);
+  cursor:pointer;
+  transition:.3s;
 }
-body.dark .card{background:#1e293b}
+.card:hover{
+  transform:translateY(-6px);
+}
+body.dark .card{
+  background:#1e293b;
+}
 
-.card img,.card video{
+/* MEDIA */
+.card img,
+.card video{
   width:100%;
   height:220px;
   object-fit:cover;
-  cursor:pointer;
+  display:block;
 }
 
-/* Modal */
+/* ================= EMPTY ================= */
+.empty{
+  text-align:center;
+  margin-top:80px;
+  color:#6b7280;
+}
+
+/* ================= MODAL ================= */
 #modal{
   position:fixed;
   inset:0;
-  background:rgba(0,0,0,.85);
+  background:rgba(0,0,0,.88);
   display:none;
   align-items:center;
   justify-content:center;
   z-index:1000;
 }
-#modal img,#modal video{
+
+#modalContent img,
+#modalContent video{
   max-width:90vw;
   max-height:90vh;
-  object-fit:contain; /* 🔥 ZOOM FIX */
-  border-radius:16px;
+  object-fit:contain;
+  border-radius:18px;
 }
+
 #close{
   position:absolute;
   top:20px;
   right:30px;
-  font-size:32px;
+  font-size:34px;
   color:white;
   cursor:pointer;
+  font-weight:700;
+}
+
+/* ================= MOBILE ================= */
+@media(max-width:600px){
+  header h2{font-size:18px}
+  .grid{padding:18px}
 }
 </style>
 </head>
 
 <body>
 
+<!-- ================= HEADER ================= -->
 <header>
-  <h2>Gallery</h2>
+  <h2>📸 Gallery – Amovi's Cafe</h2>
   <button onclick="toggleDark()">🌙</button>
 </header>
 
+<!-- ================= GRID ================= -->
 <div id="grid" class="grid"></div>
 
+<div id="empty" class="empty" style="display:none">
+  No photos or videos uploaded yet
+</div>
+
+<!-- ================= MODAL ================= -->
 <div id="modal" onclick="closeModal()">
   <span id="close">×</span>
   <div id="modalContent"></div>
 </div>
 
+<!-- ================= FIREBASE ================= -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+
 <script>
-/* Dark mode */
+/* ================= FIREBASE INIT ================= */
+firebase.initializeApp({
+  apiKey: "AIzaSyBymiTjjqUN-AAspzoA_bOGUWOzEc9o3jA",
+  authDomain: "amovis-cafe-booking.firebaseapp.com",
+  projectId: "amovis-cafe-booking"
+});
+
+const db = firebase.firestore();
+
+/* ================= DARK MODE ================= */
 function toggleDark(){
   document.body.classList.toggle("dark");
-  localStorage.setItem("amovis_dark",document.body.classList.contains("dark"));
+  localStorage.setItem("amovis_dark",
+    document.body.classList.contains("dark")
+  );
 }
 if(localStorage.getItem("amovis_dark")==="true"){
   document.body.classList.add("dark");
 }
 
-/* Load gallery */
-const media=JSON.parse(localStorage.getItem("amovis_gallery")||"[]");
-const grid=document.getElementById("grid");
+/* ================= LOAD GALLERY ================= */
+const grid = document.getElementById("grid");
+const empty = document.getElementById("empty");
 
-media.forEach(m=>{
-  grid.innerHTML+=`
-    <div class="card">
-      ${m.type==="image"
-        ? `<img src="${m.url}" onclick="openModal('image','${m.url}')">`
-        : `<video src="${m.url}" onclick="openModal('video','${m.url}')"></video>`}
-    </div>`;
-});
+db.collection("gallery")
+  .orderBy("createdAt","desc")
+  .onSnapshot(snapshot=>{
+    grid.innerHTML="";
 
-/* Modal */
+    if(snapshot.empty){
+      empty.style.display="block";
+      return;
+    }
+
+    empty.style.display="none";
+
+    snapshot.forEach(doc=>{
+      const m = doc.data();
+
+      const card = document.createElement("div");
+      card.className = "card";
+
+      if(m.type === "image"){
+        card.innerHTML = `<img src="${m.url}">`;
+        card.onclick = ()=>openModal("image",m.url);
+      }else{
+        card.innerHTML = `<video src="${m.url}" muted></video>`;
+        card.onclick = ()=>openModal("video",m.url);
+      }
+
+      grid.appendChild(card);
+    });
+  });
+
+/* ================= MODAL ================= */
 function openModal(type,url){
   document.getElementById("modal").style.display="flex";
-  document.getElementById("modalContent").innerHTML=
+  document.getElementById("modalContent").innerHTML =
     type==="image"
     ? `<img src="${url}">`
     : `<video src="${url}" controls autoplay></video>`;
 }
+
 function closeModal(){
   document.getElementById("modal").style.display="none";
   document.getElementById("modalContent").innerHTML="";
