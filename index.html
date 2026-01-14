@@ -97,7 +97,6 @@ header{
   padding:18px;
 }
 
-/* Single ad */
 .ad-box{
   width:100%;
   height:100%;
@@ -129,24 +128,13 @@ header{
 
 /* ================= MOBILE ================= */
 @media(max-width:900px){
-  header{
-    padding:12px 14px;
-  }
-
-  .brand h1{
-    font-size:16px;
-  }
-
-  .logo{
-    width:48px;
-    height:48px;
-  }
-
+  header{padding:12px 14px;}
+  .brand h1{font-size:16px;}
+  .logo{width:48px;height:48px;}
   .ads-container{
     top:78px;
     height:calc(100vh - 78px);
   }
-
   .page{
     grid-template-columns:1fr;
     padding:14px;
@@ -171,61 +159,100 @@ header{
   <div class="ads-track" id="adsTrack"></div>
 </div>
 
+<!-- 🔥 Firebase SDK -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+
 <script>
-const ads = JSON.parse(localStorage.getItem("amovis_ads")) || [];
+/* ================= FIREBASE CONFIG ================= */
+const firebaseConfig = {
+  apiKey: "AIzaSyBymiTjjqUN-AAspzoA_bOGUWOzEc9o3jA",
+  authDomain: "amovis-cafe-booking.firebaseapp.com",
+  projectId: "amovis-cafe-booking",
+  appId: "1:1049074624404:web:35b18f7c0470939257d181"
+};
+
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
+
+/* ================= LOGIC ================= */
 const track = document.getElementById("adsTrack");
-
-let pages = [];
-let pageIndex = 0;
-
-/* detect mobile */
 const isMobile = window.innerWidth < 900;
 const ADS_PER_PAGE = isMobile ? 1 : 2;
 
-/* ================= BUILD PAGES ================= */
-for(let i=0;i<ads.length;i+=ADS_PER_PAGE){
-  pages.push(ads.slice(i,i+ADS_PER_PAGE));
-}
+let pages = [];
+let pageIndex = 0;
+let totalDuration = 0;
 
-pages.forEach(group=>{
-  const page=document.createElement("div");
-  page.className="page";
-
-  group.forEach(ad=>{
-    const box=document.createElement("div");
-    box.className="ad-box";
-
-    if(ad.type==="video"){
-      box.innerHTML=`<video src="${ad.url}" autoplay muted loop playsinline></video>`;
-    }else{
-      box.innerHTML=`<img src="${ad.url}">`;
+/* ================= LOAD ADS FROM FIRESTORE ================= */
+db.collection("ads")
+  .orderBy("createdAt","asc")
+  .get()
+  .then(snapshot=>{
+    if(snapshot.empty){
+      autoHome(30000);
+      return;
     }
 
-    box.onclick=()=>{
-      const el=box.querySelector("video,img");
-      if(el.requestFullscreen) el.requestFullscreen();
-      if(el.tagName==="VIDEO"){
-        el.muted=false;
-        el.play();
-      }
-    };
+    const ads = [];
+    snapshot.forEach(doc=>ads.push(doc.data()));
 
-    page.appendChild(box);
+    for(let i=0;i<ads.length;i+=ADS_PER_PAGE){
+      pages.push(ads.slice(i,i+ADS_PER_PAGE));
+    }
+
+    pages.forEach(group=>{
+      const page=document.createElement("div");
+      page.className="page";
+
+      group.forEach(ad=>{
+        const box=document.createElement("div");
+        box.className="ad-box";
+
+        if(ad.type==="video"){
+          box.innerHTML=
+            `<video src="${ad.url}" autoplay muted loop playsinline></video>`;
+        }else{
+          box.innerHTML=`<img src="${ad.url}">`;
+        }
+
+        box.onclick=()=>{
+          const el=box.querySelector("video,img");
+          if(el.requestFullscreen) el.requestFullscreen();
+          if(el.tagName==="VIDEO"){
+            el.muted=false;
+            el.play();
+          }
+        };
+
+        page.appendChild(box);
+      });
+
+      track.appendChild(page);
+    });
+
+    startAutoScroll();
   });
 
-  track.appendChild(page);
-});
-
 /* ================= AUTO SCROLL ================= */
-if(pages.length){
-  setInterval(()=>{
+function startAutoScroll(){
+  const interval = setInterval(()=>{
     pageIndex++;
-    if(pageIndex>=pages.length){
+    if(pageIndex >= pages.length){
+      clearInterval(interval);
       goHome();
       return;
     }
-    track.style.transform=`translateY(-${pageIndex*100}%)`;
+    track.style.transform =
+      `translateY(-${pageIndex * 100}%)`;
   },10000);
+
+  autoHome(pages.length * 10000);
+}
+
+/* ================= AUTO HOME ================= */
+function autoHome(ms){
+  setTimeout(goHome, ms);
 }
 
 function goHome(){
