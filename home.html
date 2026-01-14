@@ -151,15 +151,11 @@ footer p{text-align:center;margin-top:18px;font-size:13px}
 /* ================= MOBILE ================= */
 @media(max-width:768px){
 body{padding-top:78px}
-
 .header-right .header-badge{display:none}
-
 .brand{font-size:16px}
 .brand span{font-size:11px}
-
 .video-box{height:220px}
 .video-box i{font-size:44px}
-
 .footer-grid{grid-template-columns:1fr}
 }
 </style>
@@ -178,9 +174,9 @@ Amovi's Cafe & Fast Food
 <div class="header-right">
 <div class="header-badge">🎬 Private Theatre • Celebrations</div>
 <a href="https://www.instagram.com/amoviscafe/" target="_blank">
-<i class="fa-brands fa-instagram insta"></i></a>
+<i class="fa-brands fa-instagram"></i></a>
 <a href="https://www.facebook.com/share/1bjXGC83gt/" target="_blank">
-<i class="fa-brands fa-facebook-f fb"></i></a>
+<i class="fa-brands fa-facebook-f"></i></a>
 </div>
 </header>
 
@@ -390,6 +386,37 @@ v.play();
 
 updateTotal();
 loadReviews();
+
+<!-- ================= FIREBASE ================= -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+
+<script>
+firebase.initializeApp({
+  apiKey: "AIzaSyBymiTjjqUN-AAspzoA_bOGUWOzEc9o3jA",
+  authDomain: "amovis-cafe-booking.firebaseapp.com",
+  projectId: "amovis-cafe-booking"
+});
+const db = firebase.firestore();
+
+/* 🔥 LOAD MAIN VIDEO FROM FIRESTORE */
+const hero=document.getElementById("heroVideo");
+
+db.collection("settings").doc("main").onSnapshot(doc=>{
+  if(doc.exists){
+    const url = doc.data().url;
+    hero.innerHTML = `
+      <video id="heroVid" src="${url}" autoplay muted loop playsinline></video>
+    `;
+    const v=document.getElementById("heroVid");
+    hero.onclick=()=>{
+      v.muted=false;
+      v.controls=true;
+      if(v.requestFullscreen)v.requestFullscreen();
+      v.play();
+    };
+  }
+});
 </script>
 
 </body>
