@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Welcome – Amovi's Cafe</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700;800&display=swap" rel="stylesheet">
+
+<style>
+*{
+  margin:0;
+  padding:0;
+  box-sizing:border-box;
+  font-family:'Poppins',sans-serif;
+}
+
+body{
+  height:100vh;
+  background:#05050b;
+  overflow:hidden;
+  color:#fff;
+}
+
+/* ================= HEADER ================= */
+header{
+  height:120px;
+  width:100%;
+  position:fixed;
+  top:0;
+  left:0;
+  z-index:10;
+  background:rgba(0,0,0,.6);
+  backdrop-filter:blur(14px);
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  padding:0 40px;
+}
+
+.brand{
+  display:flex;
+  align-items:center;
+  gap:18px;
+}
+
+.logo{
+  width:72px;
+  height:72px;
+  border-radius:50%;
+  background:#000;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  box-shadow:
+    0 0 25px #a855f7,
+    0 0 55px #7c3aed;
+}
+
+.logo img{
+  width:70%;
+}
+
+.brand h1{
+  font-size:30px;
+  font-weight:800;
+}
+
+.skip{
+  background:linear-gradient(90deg,#7c3aed,#ec4899);
+  padding:10px 26px;
+  border-radius:22px;
+  cursor:pointer;
+  font-size:13px;
+}
+
+/* ================= ADS ================= */
+.ads-container{
+  position:absolute;
+  top:120px;
+  left:0;
+  width:100%;
+  height:calc(100vh - 120px);
+  overflow:hidden;
+}
+
+.ads-track{
+  height:100%;
+  transition:transform 1.4s cubic-bezier(.4,0,.2,1);
+}
+
+/* ================= PAGE ================= */
+.page{
+  height:100%;
+  display:grid;
+  grid-template-columns:repeat(2,1fr);
+  gap:30px;
+  padding:30px;
+}
+
+/* Single ad box */
+.ad-box{
+  width:100%;
+  height:100%;
+  border-radius:30px;
+  overflow:hidden; /* 🔒 zoom fix */
+  position:relative;
+  box-shadow:0 40px 120px rgba(0,0,0,.85);
+}
+
+/* IMAGE */
+.ad-box img{
+  width:100%;
+  height:100%;
+  object-fit:cover;
+  animation:zoom 10s linear forwards;
+}
+
+@keyframes zoom{
+  from{transform:scale(1);}
+  to{transform:scale(1.12);}
+}
+
+/* VIDEO */
+.ad-box video{
+  width:100%;
+  height:100%;
+  object-fit:cover;
+}
+</style>
+</head>
+
+<body>
+
+<header>
+  <div class="brand">
+    <div class="logo">
+      <img src="assets/logo.png">
+    </div>
+    <h1>Welcome to Amovi’s Cafe</h1>
+  </div>
+  <div class="skip" onclick="goHome()">Skip</div>
+</header>
+
+<div class="ads-container">
+  <div class="ads-track" id="adsTrack"></div>
+</div>
+
+<script>
+const ads = JSON.parse(localStorage.getItem("amovis_ads")) || [];
+const track = document.getElementById("adsTrack");
+
+let pages = [];
+let pageIndex = 0;
+
+/* ================= BUILD PAGES ================= */
+for(let i=0;i<ads.length;i+=2){
+  pages.push(ads.slice(i,i+2));
+}
+
+pages.forEach(group=>{
+  const page=document.createElement("div");
+  page.className="page";
+
+  group.forEach(ad=>{
+    const box=document.createElement("div");
+    box.className="ad-box";
+
+    if(ad.type==="video"){
+      box.innerHTML=`<video src="${ad.url}" autoplay muted loop playsinline></video>`;
+    }else{
+      box.innerHTML=`<img src="${ad.url}">`;
+    }
+
+    box.onclick=()=>{
+      const el=box.querySelector("video,img");
+      if(el.requestFullscreen) el.requestFullscreen();
+      if(el.tagName==="VIDEO"){
+        el.muted=false;
+        el.play();
+      }
+    };
+
+    page.appendChild(box);
+  });
+
+  track.appendChild(page);
+});
+
+/* ================= AUTO SCROLL ================= */
+if(pages.length){
+  setInterval(()=>{
+    pageIndex++;
+    if(pageIndex>=pages.length){
+      goHome();
+      return;
+    }
+    track.style.transform=`translateY(-${pageIndex*100}%)`;
+  },10000); // 🔥 10 sec per page (2 ads)
+}
+
+function goHome(){
+  location.href="home.html";
+}
+</script>
+
+</body>
+</html>

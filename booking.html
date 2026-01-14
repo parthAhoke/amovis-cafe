@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Select Date & Time – Amovi's Cafe</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+
+<style>
+*{box-sizing:border-box;font-family:Poppins,sans-serif}
+body{
+  margin:0;
+  background:linear-gradient(135deg,#ede9fe,#fce7f3);
+  padding-top:90px;
+}
+
+/* HEADER */
+header{
+  position:fixed;top:0;left:0;width:100%;height:80px;
+  background:linear-gradient(90deg,#6d28d9,#7c3aed,#ec4899);
+  display:flex;align-items:center;
+  padding:0 20px;color:#fff;z-index:1000;
+  box-shadow:0 10px 25px rgba(0,0,0,.25)
+}
+header button{
+  background:rgba(255,255,255,.18);
+  border:none;color:#fff;
+  padding:10px 14px;border-radius:14px;
+  font-weight:600;cursor:pointer;margin-right:14px
+}
+
+/* CARD */
+.card{
+  background:#fff;
+  max-width:420px;
+  margin:auto;
+  padding:26px;
+  border-radius:24px;
+  box-shadow:0 25px 60px rgba(0,0,0,.25)
+}
+.card h3{text-align:center;margin-bottom:6px}
+.card p{text-align:center;font-size:13px;color:#6b7280}
+
+/* DATE */
+input[type="date"]{
+  width:100%;padding:12px;
+  border-radius:14px;border:1.5px solid #d1d5db;
+  margin:14px 0
+}
+
+/* TIME SLOTS */
+.slots{
+  display:grid;
+  grid-template-columns:repeat(2,1fr);
+  gap:12px;
+  margin-top:10px
+}
+.slot{
+  padding:14px;
+  border-radius:14px;
+  text-align:center;
+  font-weight:600;
+  cursor:pointer;
+  border:2px solid #22c55e;
+  color:#166534;
+  background:#ecfdf5
+}
+.slot.red{
+  border-color:#ef4444;
+  background:#fee2e2;
+  color:#991b1b;
+  cursor:not-allowed
+}
+.slot.selected{
+  background:#ede9fe;
+  border-color:#7c3aed;
+  color:#5b21b6
+}
+
+/* BUTTON */
+.btn{
+  width:100%;
+  padding:15px;
+  margin-top:18px;
+  border:none;border-radius:16px;
+  background:linear-gradient(90deg,#7c3aed,#ec4899);
+  color:#fff;font-weight:700;
+  cursor:pointer
+}
+.btn:disabled{
+  opacity:.6;cursor:not-allowed
+}
+</style>
+</head>
+
+<body>
+
+<header>
+  <button onclick="history.back()">← Back</button>
+  <h2>Amovi's Cafe & Fast Food</h2>
+</header>
+
+<div class="card">
+  <h3>Select Date & Time</h3>
+  <p>Choose your preferred slot</p>
+
+  <!-- DATE -->
+  <input type="date" id="date">
+
+  <!-- TIME SLOTS -->
+  <div class="slots" id="slots"></div>
+
+  <button id="proceedBtn" class="btn" disabled onclick="goNext()">
+    Proceed →
+  </button>
+</div>
+
+<script>
+const dateInput = document.getElementById("date");
+const slotsDiv = document.getElementById("slots");
+const proceedBtn = document.getElementById("proceedBtn");
+
+const today = new Date();
+const todayStr = today.toISOString().split("T")[0];
+dateInput.min = todayStr;
+dateInput.value = todayStr;
+
+let selectedSlot = null;
+
+/* EXACT SLOTS */
+const TIME_SLOTS = [
+  "09:30 AM – 11:30 AM",
+  "12:00 PM – 02:00 PM",
+  "03:00 PM – 05:00 PM",
+  "05:30 PM – 07:30 PM",
+  "08:15 PM – 10:00 PM"
+];
+
+/* CONVERT TIME TO MINUTES */
+function timeToMinutes(t){
+  let [time, mer] = t.split(" ");
+  let [h,m] = time.split(":").map(Number);
+  if(mer==="PM" && h!==12) h+=12;
+  if(mer==="AM" && h===12) h=0;
+  return h*60 + m;
+}
+
+/* RENDER SLOTS */
+function renderSlots(){
+  slotsDiv.innerHTML="";
+  selectedSlot=null;
+  proceedBtn.disabled=true;
+
+  const selectedDate = dateInput.value;
+  const nowMinutes = today.getHours()*60 + today.getMinutes();
+
+  TIME_SLOTS.forEach(slot=>{
+    const startTime = slot.split("–")[0].trim();
+    const slotStartMin = timeToMinutes(startTime);
+
+    const d = document.createElement("div");
+    d.className="slot";
+    d.innerText=slot;
+
+    /* 🔴 PAST SLOT */
+    if(selectedDate===todayStr && slotStartMin <= nowMinutes){
+      d.classList.add("red");
+    }else{
+      d.onclick=()=>{
+        document.querySelectorAll(".slot")
+          .forEach(s=>s.classList.remove("selected"));
+        d.classList.add("selected");
+        selectedSlot=slot;
+        proceedBtn.disabled=false;
+      };
+    }
+    slotsDiv.appendChild(d);
+  });
+}
+
+/* DATE CHANGE */
+dateInput.onchange = renderSlots;
+
+/* PROCEED */
+function goNext(){
+  if(!selectedSlot) return alert("Select slot");
+
+  localStorage.setItem("date",dateInput.value);
+  localStorage.setItem("timeSlot",selectedSlot);
+
+  window.location.href="details.html";
+}
+
+/* INIT */
+renderSlots();
+</script>
+
+
+</body>
+</html>
