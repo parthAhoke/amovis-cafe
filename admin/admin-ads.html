@@ -8,7 +8,6 @@
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700;800&display=swap" rel="stylesheet">
 
 <style>
-/* ================= RESET ================= */
 *{
   margin:0;
   padding:0;
@@ -21,7 +20,7 @@ body{
   background:linear-gradient(135deg,#f5f3ff,#fdf2f8);
 }
 
-/* ================= HEADER ================= */
+/* HEADER */
 header{
   background:linear-gradient(90deg,#6d28d9,#7c3aed,#db2777);
   padding:26px 20px;
@@ -29,56 +28,34 @@ header{
   color:#fff;
   box-shadow:0 12px 35px rgba(0,0,0,.35);
 }
+header h2{font-size:28px;font-weight:800}
+header p{font-size:13px;opacity:.9}
 
-header h2{
-  font-size:28px;
-  font-weight:800;
-  text-shadow:2px 2px 12px rgba(0,0,0,.4);
-}
-
-header p{
-  font-size:13px;
-  opacity:.9;
-}
-
-/* ================= CONTAINER ================= */
+/* CONTAINER */
 .container{
   max-width:1100px;
   margin:60px auto;
   padding:20px;
 }
 
-/* ================= UPLOAD CARD ================= */
+/* UPLOAD BOX */
 .upload-box{
-  background:rgba(255,255,255,.55);
+  background:rgba(255,255,255,.6);
   backdrop-filter:blur(14px);
   border-radius:30px;
   padding:34px;
   box-shadow:0 25px 60px rgba(0,0,0,.25);
-  border:1px solid rgba(255,255,255,.45);
   max-width:520px;
   margin:0 auto 60px;
   text-align:center;
 }
 
-.upload-box h3{
-  font-size:22px;
-  margin-bottom:6px;
-}
-
-.upload-box p{
-  font-size:13px;
-  color:#4b5563;
-}
+.upload-box h3{font-size:22px}
+.upload-box p{font-size:13px;color:#4b5563}
 
 /* FILE INPUT */
-.file-input{
-  margin:24px 0;
-}
-
-.file-input input{
-  display:none;
-}
+.file-input{margin:24px 0}
+.file-input input{display:none}
 
 .file-label{
   display:block;
@@ -88,11 +65,6 @@ header p{
   color:#fff;
   font-weight:700;
   cursor:pointer;
-  transition:.3s;
-}
-
-.file-label:hover{
-  transform:scale(1.05);
 }
 
 .file-name{
@@ -111,22 +83,15 @@ header p{
   color:#fff;
   font-weight:700;
   cursor:pointer;
-  transition:.3s;
 }
 
-.upload-box button:hover{
-  transform:scale(1.1);
-  box-shadow:0 14px 30px rgba(0,0,0,.35);
-}
-
-/* ================= ADS GRID ================= */
+/* ADS GRID */
 .ads-grid{
   display:grid;
   grid-template-columns:repeat(auto-fit,minmax(260px,1fr));
   gap:30px;
 }
 
-/* ================= AD CARD ================= */
 .ad-card{
   position:relative;
   background:#000;
@@ -142,7 +107,7 @@ header p{
   object-fit:cover;
 }
 
-/* DELETE BUTTON */
+/* DELETE */
 .delete{
   position:absolute;
   top:12px;
@@ -155,11 +120,9 @@ header p{
   color:#fff;
   font-size:20px;
   cursor:pointer;
-  z-index:2;
-  box-shadow:0 8px 18px rgba(0,0,0,.4);
 }
 
-/* ================= FOOTER ================= */
+/* FOOTER */
 footer{
   margin-top:80px;
   background:linear-gradient(135deg,#312e81,#4c1d95,#701a75);
@@ -203,45 +166,61 @@ footer{
   © 2026 Amovi's Cafe & Fast Food · Advertisement Manager
 </footer>
 
+<!-- 🔥 FIREBASE SDK -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+
 <script>
+/* ================= FIREBASE CONFIG ================= */
+const firebaseConfig = {
+  apiKey: "AIzaSyBymiTjjqUN-AAspzoA_bOGUWOzEc9o3jA",
+  authDomain: "amovis-cafe-booking.firebaseapp.com",
+  projectId: "amovis-cafe-booking",
+  appId: "1:1049074624404:web:35b18f7c0470939257d181"
+};
+
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
+
 /* ================= CLOUDINARY ================= */
 const CLOUD_NAME = "amoviscafe";
 const UPLOAD_PRESET = "amovis_gallery";
 
-/* ================= STORAGE ================= */
-let ads = JSON.parse(localStorage.getItem("amovis_ads")) || [];
+/* ================= DOM ================= */
 const grid = document.getElementById("adsGrid");
 
 /* FILE NAME */
 function showName(){
-  const f = document.getElementById("file").files[0];
-  document.getElementById("fileName").innerText =
-    f ? f.name : "No file selected";
+  const f = file.files[0];
+  fileName.innerText = f ? f.name : "No file selected";
 }
 
-/* RENDER ADS */
-function renderAds(){
-  grid.innerHTML="";
-  ads.forEach((a,i)=>{
-    grid.innerHTML += `
-      <div class="ad-card">
-        ${a.type==="image"
-          ? `<img src="${a.url}">`
-          : `<video src="${a.url}" muted loop autoplay></video>`
-        }
-        <button class="delete" onclick="removeAd(${i})">×</button>
-      </div>
-    `;
+/* LOAD ADS */
+db.collection("ads")
+  .orderBy("createdAt","desc")
+  .onSnapshot(snapshot=>{
+    grid.innerHTML="";
+    snapshot.forEach(doc=>{
+      const a = doc.data();
+      grid.innerHTML += `
+        <div class="ad-card">
+          ${a.type==="image"
+            ? `<img src="${a.url}">`
+            : `<video src="${a.url}" muted autoplay loop></video>`
+          }
+          <button class="delete" onclick="deleteAd('${doc.id}')">×</button>
+        </div>
+      `;
+    });
   });
-}
 
 /* UPLOAD AD */
 function uploadAd(){
-  const file = document.getElementById("file").files[0];
-  if(!file) return alert("Select file first");
+  const f = file.files[0];
+  if(!f) return alert("Select file first");
 
   const data = new FormData();
-  data.append("file",file);
+  data.append("file",f);
   data.append("upload_preset",UPLOAD_PRESET);
 
   fetch(`https://api.cloudinary.com/v1_1/${CLOUD_NAME}/auto/upload`,{
@@ -250,27 +229,21 @@ function uploadAd(){
   })
   .then(r=>r.json())
   .then(res=>{
-    ads.unshift({
-      url:res.secure_url,
-      type:res.resource_type
+    db.collection("ads").add({
+      url: res.secure_url,
+      type: res.resource_type,
+      createdAt: firebase.firestore.FieldValue.serverTimestamp()
     });
-    localStorage.setItem("amovis_ads",JSON.stringify(ads));
-    renderAds();
-    document.getElementById("file").value="";
+    file.value="";
     showName();
   });
 }
 
 /* DELETE AD */
-function removeAd(i){
+function deleteAd(id){
   if(!confirm("Remove this advertisement?")) return;
-  ads.splice(i,1);
-  localStorage.setItem("amovis_ads",JSON.stringify(ads));
-  renderAds();
+  db.collection("ads").doc(id).delete();
 }
-
-/* INIT */
-renderAds();
 </script>
 
 </body>
