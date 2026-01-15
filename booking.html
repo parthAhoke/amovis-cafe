@@ -8,152 +8,107 @@
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
 
 <style>
-/* ================= RESET ================= */
-*{
-  margin:0;
-  padding:0;
-  box-sizing:border-box;
-  font-family:'Poppins',sans-serif;
-}
-
-/* ================= BODY ================= */
+*{box-sizing:border-box;font-family:Poppins,sans-serif}
 body{
+  margin:0;
   background:linear-gradient(135deg,#ede9fe,#fce7f3);
   padding-top:90px;
-  min-height:100vh;
 }
 
-/* ================= HEADER ================= */
+/* HEADER */
 header{
-  position:fixed;
-  top:0;left:0;
-  width:100%;
-  height:80px;
+  position:fixed;top:0;left:0;width:100%;height:80px;
   background:linear-gradient(90deg,#6d28d9,#7c3aed,#ec4899);
-  display:flex;
-  align-items:center;
-  padding:0 20px;
-  color:#fff;
-  z-index:1000;
-  box-shadow:0 10px 25px rgba(0,0,0,.25);
+  display:flex;align-items:center;
+  padding:0 20px;color:#fff;z-index:1000;
+  box-shadow:0 10px 25px rgba(0,0,0,.25)
 }
-
 header button{
   background:rgba(255,255,255,.18);
-  border:none;
-  color:#fff;
-  padding:10px 14px;
-  border-radius:14px;
-  font-weight:600;
-  cursor:pointer;
-  margin-right:14px;
+  border:none;color:#fff;
+  padding:10px 14px;border-radius:14px;
+  font-weight:600;cursor:pointer;margin-right:14px
 }
 
-/* ================= CARD ================= */
+/* CARD */
 .card{
   background:#fff;
   max-width:420px;
   margin:auto;
-  padding:28px;
-  border-radius:26px;
-  box-shadow:0 25px 60px rgba(0,0,0,.25);
+  padding:26px;
+  border-radius:24px;
+  box-shadow:0 25px 60px rgba(0,0,0,.25)
 }
+.card h3{text-align:center;margin-bottom:6px}
+.card p{text-align:center;font-size:13px;color:#6b7280}
 
-.card h3{
-  text-align:center;
-  margin-bottom:6px;
-}
-
-.card p{
-  text-align:center;
-  font-size:13px;
-  color:#6b7280;
-}
-
-/* ================= DATE ================= */
+/* DATE */
 input[type="date"]{
-  width:100%;
-  padding:12px;
-  border-radius:14px;
-  border:1.5px solid #d1d5db;
-  margin:16px 0;
+  width:100%;padding:12px;
+  border-radius:14px;border:1.5px solid #d1d5db;
+  margin:14px 0
 }
 
-/* ================= SLOTS ================= */
+/* TIME SLOTS */
 .slots{
   display:grid;
   grid-template-columns:repeat(2,1fr);
   gap:12px;
-  margin-top:12px;
+  margin-top:10px
 }
-
 .slot{
   padding:14px;
-  border-radius:16px;
+  border-radius:14px;
   text-align:center;
   font-weight:600;
   cursor:pointer;
   border:2px solid #22c55e;
   color:#166534;
-  background:#ecfdf5;
-  transition:.25s;
+  background:#ecfdf5
 }
-
-.slot:hover{
-  transform:scale(1.04);
-}
-
-/* BOOKED / PAST */
 .slot.red{
   border-color:#ef4444;
   background:#fee2e2;
   color:#991b1b;
-  cursor:not-allowed;
-  transform:none;
+  cursor:not-allowed
 }
-
-/* SELECTED */
 .slot.selected{
   background:#ede9fe;
   border-color:#7c3aed;
-  color:#5b21b6;
+  color:#5b21b6
 }
 
-/* ================= BUTTON ================= */
+/* BUTTON */
 .btn{
   width:100%;
   padding:15px;
-  margin-top:20px;
-  border:none;
-  border-radius:18px;
+  margin-top:18px;
+  border:none;border-radius:16px;
   background:linear-gradient(90deg,#7c3aed,#ec4899);
-  color:#fff;
-  font-weight:700;
-  cursor:pointer;
+  color:#fff;font-weight:700;
+  cursor:pointer
 }
-
 .btn:disabled{
-  opacity:.6;
-  cursor:not-allowed;
+  opacity:.6;cursor:not-allowed
 }
 </style>
 </head>
 
 <body>
 
-<!-- ================= HEADER ================= -->
 <header>
   <button onclick="history.back()">← Back</button>
   <h2>Amovi's Cafe & Fast Food</h2>
 </header>
 
-<!-- ================= CARD ================= -->
 <div class="card">
   <h3>Select Date & Time</h3>
   <p>Choose your preferred slot</p>
 
+  <!-- DATE -->
   <input type="date" id="date">
 
+  <!-- TIME SLOTS -->
   <div class="slots" id="slots"></div>
 
   <button id="proceedBtn" class="btn" disabled onclick="goNext()">
@@ -161,35 +116,19 @@ input[type="date"]{
   </button>
 </div>
 
-<!-- ================= FIREBASE ================= -->
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
-
 <script>
-/* ================= FIREBASE INIT ================= */
-firebase.initializeApp({
-  apiKey: "AIzaSyBymiTjjqUN-AAspzoA_bOGUWOzEc9o3jA",
-  authDomain: "amovis-cafe-booking.firebaseapp.com",
-  projectId: "amovis-cafe-booking"
-});
-
-const db = firebase.firestore();
-
-/* ================= ELEMENTS ================= */
 const dateInput = document.getElementById("date");
 const slotsDiv = document.getElementById("slots");
 const proceedBtn = document.getElementById("proceedBtn");
 
-/* ================= DATE INIT ================= */
 const today = new Date();
 const todayStr = today.toISOString().split("T")[0];
 dateInput.min = todayStr;
 dateInput.value = todayStr;
 
 let selectedSlot = null;
-let bookedSlots = [];
 
-/* ================= TIME SLOTS ================= */
+/* EXACT SLOTS */
 const TIME_SLOTS = [
   "09:30 AM – 11:30 AM",
   "12:00 PM – 02:00 PM",
@@ -198,7 +137,7 @@ const TIME_SLOTS = [
   "08:15 PM – 10:00 PM"
 ];
 
-/* ================= TIME TO MIN ================= */
+/* CONVERT TIME TO MINUTES */
 function timeToMinutes(t){
   let [time, mer] = t.split(" ");
   let [h,m] = time.split(":").map(Number);
@@ -207,29 +146,13 @@ function timeToMinutes(t){
   return h*60 + m;
 }
 
-/* ================= LOAD BOOKED SLOTS ================= */
-function loadBookedSlots(){
-  bookedSlots = [];
-  const selectedDate = dateInput.value;
-
-  db.collection("bookings")
-    .where("date","==",selectedDate)
-    .where("status","==","PAID")
-    .get()
-    .then(snapshot=>{
-      snapshot.forEach(doc=>{
-        bookedSlots.push(doc.data().timeSlot);
-      });
-      renderSlots();
-    });
-}
-
-/* ================= RENDER SLOTS ================= */
+/* RENDER SLOTS */
 function renderSlots(){
   slotsDiv.innerHTML="";
   selectedSlot=null;
   proceedBtn.disabled=true;
 
+  const selectedDate = dateInput.value;
   const nowMinutes = today.getHours()*60 + today.getMinutes();
 
   TIME_SLOTS.forEach(slot=>{
@@ -240,16 +163,10 @@ function renderSlots(){
     d.className="slot";
     d.innerText=slot;
 
-    /* 🔴 PAST TIME */
-    if(dateInput.value===todayStr && slotStartMin <= nowMinutes){
+    /* 🔴 PAST SLOT */
+    if(selectedDate===todayStr && slotStartMin <= nowMinutes){
       d.classList.add("red");
-    }
-    /* 🔴 ALREADY BOOKED */
-    else if(bookedSlots.includes(slot)){
-      d.classList.add("red");
-    }
-    /* 🟢 AVAILABLE */
-    else{
+    }else{
       d.onclick=()=>{
         document.querySelectorAll(".slot")
           .forEach(s=>s.classList.remove("selected"));
@@ -258,20 +175,16 @@ function renderSlots(){
         proceedBtn.disabled=false;
       };
     }
-
     slotsDiv.appendChild(d);
   });
 }
 
-/* ================= DATE CHANGE ================= */
-dateInput.onchange = loadBookedSlots;
+/* DATE CHANGE */
+dateInput.onchange = renderSlots;
 
-/* ================= NEXT ================= */
+/* PROCEED */
 function goNext(){
-  if(!selectedSlot){
-    alert("Please select a slot");
-    return;
-  }
+  if(!selectedSlot) return alert("Select slot");
 
   localStorage.setItem("date",dateInput.value);
   localStorage.setItem("timeSlot",selectedSlot);
@@ -279,9 +192,10 @@ function goNext(){
   window.location.href="details.html";
 }
 
-/* ================= INIT ================= */
-loadBookedSlots();
+/* INIT */
+renderSlots();
 </script>
+
 
 </body>
 </html>
