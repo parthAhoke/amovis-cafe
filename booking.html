@@ -7,49 +7,66 @@
 
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
 
+<!-- 🔥 FIREBASE -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+
 <style>
 *{box-sizing:border-box;font-family:Poppins,sans-serif}
+
 body{
   margin:0;
   background:linear-gradient(135deg,#ede9fe,#fce7f3);
   padding-top:90px;
 }
 
-/* HEADER */
+/* ================= HEADER ================= */
 header{
-  position:fixed;top:0;left:0;width:100%;height:80px;
+  position:fixed;
+  top:0;left:0;
+  width:100%;
+  height:80px;
   background:linear-gradient(90deg,#6d28d9,#7c3aed,#ec4899);
-  display:flex;align-items:center;
-  padding:0 20px;color:#fff;z-index:1000;
+  display:flex;
+  align-items:center;
+  padding:0 20px;
+  color:#fff;
+  z-index:1000;
   box-shadow:0 10px 25px rgba(0,0,0,.25)
 }
 header button{
   background:rgba(255,255,255,.18);
-  border:none;color:#fff;
-  padding:10px 14px;border-radius:14px;
-  font-weight:600;cursor:pointer;margin-right:14px
+  border:none;
+  color:#fff;
+  padding:10px 14px;
+  border-radius:14px;
+  font-weight:600;
+  cursor:pointer;
+  margin-right:14px
 }
 
-/* CARD */
+/* ================= CARD ================= */
 .card{
   background:#fff;
-  max-width:420px;
+  max-width:440px;
   margin:auto;
   padding:26px;
-  border-radius:24px;
+  border-radius:26px;
   box-shadow:0 25px 60px rgba(0,0,0,.25)
 }
 .card h3{text-align:center;margin-bottom:6px}
 .card p{text-align:center;font-size:13px;color:#6b7280}
 
-/* DATE */
+/* ================= DATE ================= */
 input[type="date"]{
-  width:100%;padding:12px;
-  border-radius:14px;border:1.5px solid #d1d5db;
+  width:100%;
+  padding:12px;
+  border-radius:14px;
+  border:1.5px solid #d1d5db;
   margin:14px 0
 }
 
-/* TIME SLOTS */
+/* ================= SLOTS ================= */
 .slots{
   display:grid;
   grid-template-columns:repeat(2,1fr);
@@ -64,32 +81,44 @@ input[type="date"]{
   cursor:pointer;
   border:2px solid #22c55e;
   color:#166534;
-  background:#ecfdf5
+  background:#ecfdf5;
+  transition:.25s
 }
+.slot:hover{
+  transform:scale(1.03)
+}
+
+/* 🔴 BOOKED / PAST */
 .slot.red{
   border-color:#ef4444;
   background:#fee2e2;
   color:#991b1b;
-  cursor:not-allowed
+  cursor:not-allowed;
+  transform:none
 }
+
+/* 🟣 SELECTED */
 .slot.selected{
   background:#ede9fe;
   border-color:#7c3aed;
   color:#5b21b6
 }
 
-/* BUTTON */
+/* ================= BUTTON ================= */
 .btn{
   width:100%;
   padding:15px;
   margin-top:18px;
-  border:none;border-radius:16px;
+  border:none;
+  border-radius:16px;
   background:linear-gradient(90deg,#7c3aed,#ec4899);
-  color:#fff;font-weight:700;
+  color:#fff;
+  font-weight:700;
   cursor:pointer
 }
 .btn:disabled{
-  opacity:.6;cursor:not-allowed
+  opacity:.6;
+  cursor:not-allowed
 }
 </style>
 </head>
@@ -108,7 +137,7 @@ input[type="date"]{
   <!-- DATE -->
   <input type="date" id="date">
 
-  <!-- TIME SLOTS -->
+  <!-- SLOTS -->
   <div class="slots" id="slots"></div>
 
   <button id="proceedBtn" class="btn" disabled onclick="goNext()">
@@ -117,10 +146,20 @@ input[type="date"]{
 </div>
 
 <script>
+/* ================= FIREBASE INIT ================= */
+firebase.initializeApp({
+  apiKey: "AIzaSyBymiTjjqUN-AAspzoA_bOGUWOzEc9o3jA",
+  authDomain: "amovis-cafe-booking.firebaseapp.com",
+  projectId: "amovis-cafe-booking"
+});
+const db = firebase.firestore();
+
+/* ================= ELEMENTS ================= */
 const dateInput = document.getElementById("date");
 const slotsDiv = document.getElementById("slots");
 const proceedBtn = document.getElementById("proceedBtn");
 
+/* ================= DATE SETUP ================= */
 const today = new Date();
 const todayStr = today.toISOString().split("T")[0];
 dateInput.min = todayStr;
@@ -128,7 +167,7 @@ dateInput.value = todayStr;
 
 let selectedSlot = null;
 
-/* EXACT SLOTS */
+/* ================= TIME SLOTS ================= */
 const TIME_SLOTS = [
   "09:30 AM – 11:30 AM",
   "12:00 PM – 02:00 PM",
@@ -137,7 +176,7 @@ const TIME_SLOTS = [
   "08:15 PM – 10:00 PM"
 ];
 
-/* CONVERT TIME TO MINUTES */
+/* ================= TIME TO MINUTES ================= */
 function timeToMinutes(t){
   let [time, mer] = t.split(" ");
   let [h,m] = time.split(":").map(Number);
@@ -146,14 +185,23 @@ function timeToMinutes(t){
   return h*60 + m;
 }
 
-/* RENDER SLOTS */
-function renderSlots(){
+/* ================= RENDER SLOTS ================= */
+async function renderSlots(){
   slotsDiv.innerHTML="";
   selectedSlot=null;
   proceedBtn.disabled=true;
 
   const selectedDate = dateInput.value;
   const nowMinutes = today.getHours()*60 + today.getMinutes();
+
+  /* 🔥 FETCH BOOKED SLOTS FROM FIRESTORE */
+  const snap = await db
+    .collection("bookings")
+    .where("date","==",selectedDate)
+    .where("status","==","PAID")
+    .get();
+
+  const bookedSlots = snap.docs.map(d=>d.data().timeSlot);
 
   TIME_SLOTS.forEach(slot=>{
     const startTime = slot.split("–")[0].trim();
@@ -163,10 +211,16 @@ function renderSlots(){
     d.className="slot";
     d.innerText=slot;
 
-    /* 🔴 PAST SLOT */
+    /* 🔴 PAST TIME */
     if(selectedDate===todayStr && slotStartMin <= nowMinutes){
       d.classList.add("red");
-    }else{
+    }
+    /* 🔴 ALREADY BOOKED */
+    else if(bookedSlots.includes(slot)){
+      d.classList.add("red");
+    }
+    /* 🟢 AVAILABLE */
+    else{
       d.onclick=()=>{
         document.querySelectorAll(".slot")
           .forEach(s=>s.classList.remove("selected"));
@@ -175,16 +229,20 @@ function renderSlots(){
         proceedBtn.disabled=false;
       };
     }
+
     slotsDiv.appendChild(d);
   });
 }
 
-/* DATE CHANGE */
+/* ================= DATE CHANGE ================= */
 dateInput.onchange = renderSlots;
 
-/* PROCEED */
+/* ================= PROCEED ================= */
 function goNext(){
-  if(!selectedSlot) return alert("Select slot");
+  if(!selectedSlot){
+    alert("Please select a time slot");
+    return;
+  }
 
   localStorage.setItem("date",dateInput.value);
   localStorage.setItem("timeSlot",selectedSlot);
@@ -192,10 +250,9 @@ function goNext(){
   window.location.href="details.html";
 }
 
-/* INIT */
+/* ================= INIT ================= */
 renderSlots();
 </script>
-
 
 </body>
 </html>
